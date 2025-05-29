@@ -1,0 +1,65 @@
+.backBtnLine {
+  display: flex;
+  justify-content: left;
+  margin-left: 41px;
+  margin-top: 64px;
+  margin-bottom: 0px;
+}
+
+.backBtn {
+  color: black !important;
+  font-size: 20px;            /* 加大字体 */
+  font-weight: 600;
+  height: 48px;               /* 提高按钮高度 */
+  padding: 0px !important;            /* 增加左右内边距 */
+  display: flex;
+  align-items: center;
+  gap: 10px;                  /* 图标与文字间距 */
+}
+
+.forgotPwdTitle {
+    margin-left: 56px;
+}
+.emailInputContainer {
+  margin-top: 17px !important;
+  margin-left: 92px;
+}
+
+.emailInputTitle {
+  font-size: 18px;
+  color: #6b6464;
+  margin-bottom: 8px;
+  line-height: 24px;
+}
+
+.emailInput {
+  border-radius: 20px !important;
+  margin-top: 8px;
+  width: 216px !important;
+  height: 42px !important;
+  font-size: 16px; /* 控制输入内容的字体大小 */
+
+  margin-top: 0px !important;
+}
+
+/* 修改 placeholder 的字体大小与颜色，让它更像 Title 3 */
+.emailInput::placeholder {
+  font-size: 20px;
+  font-weight: 500;
+  color: #bfbfbf; /* 可根据需要修改颜色 */
+}
+
+.sendBtn {
+    width: 154px !important;
+    height: 58px !important;
+    background-color: #0d288b !important;
+    margin-top: 52px !important;
+    margin-left: 31px !important;
+
+    .sendWord {
+        text-align: center;
+        margin-top: auto;
+        margin-bottom: auto;
+        color: #ffffff !important;
+    }
+}

@@ -1,0 +1,80 @@
+.profile-page {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 80px; /* 保留底部导航栏位置 */
+    box-sizing: border-box;
+  }
+  
+  .profile-avatar {
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  
+  .avatar-image {
+    border-radius: 50%;
+  }
+  
+  .profile-name {
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  
+  .profile-total {
+    font-size: 16px;
+    color: #1890ff;
+    margin-bottom: 24px;
+  }
+  
+  .profile-total span {
+    font-weight: bold;
+  }
+  
+  .profile-card {
+    background-color: white;
+    border-radius: 20px;
+    padding: 20px;
+    width: 90%;
+    max-width: 320px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
+  }
+  
+  .logout-button {
+    background-color: #0926b5;
+    border: none;
+    color: white;
+    width: 180px;
+    height: 44px;
+    border-radius: 28px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: 500px;
+    background: white;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    height: 64px;
+    border-top: 1px solid #eee;
+  }
+  
+  .nav-item {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .divider {
+    width: 1px;
+    height: 32px;
+    background-color: #ccc;
+  }
+  

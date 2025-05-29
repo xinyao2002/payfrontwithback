@@ -1,0 +1,51 @@
+.resetPwdTitle {
+    margin-left: 58px;
+    margin-top: 96px;
+}
+.resetContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 64px;
+}
+
+.resetForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inputItem {
+  margin-bottom: 38px;
+  width: 239px;
+}
+
+.passwordInput {
+  border-radius: 20px !important;
+  width: 239px !important;
+  height: 39px !important;
+  font-size: 20px !important;
+  font-weight: 600;
+}
+
+/* 自定义 placeholder 的字体为 Title level={3} 的风格 */
+.passwordInput::placeholder {
+  font-size: 20px !important;
+  font-weight: 500 !important;
+  color: #bfbfbf;
+}
+
+.sendBtn {
+    width: 267px !important;
+    height: 58px !important;
+    background-color: #0d288b !important;
+    margin-top: 85px !important;
+    
+
+    .sendWord {
+        text-align: center;
+        margin-top: auto;
+        margin-bottom: auto;
+        color: #ffffff !important;
+    }
+}
+

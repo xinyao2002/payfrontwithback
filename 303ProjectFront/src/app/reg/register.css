@@ -1,0 +1,45 @@
+.register-page {
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.register-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 348px;
+  margin-bottom: 16px;
+}
+
+.back-button {
+  color: black !important;
+  padding-left: 0;
+}
+
+.register-container {
+  background-color: white;
+  width: 100%;
+  max-width: 348px;
+  border-radius: 28px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.uniform-input .ant-form-item-label {
+  padding-right: 6px; /* ← 控制 label 和输入框之间的间距 */
+  text-align: left;
+}
+
+.uniform-input .ant-input,
+.uniform-input .ant-input-password {
+  width: 100%;
+  max-width: 160px; /* 保持输入框尺寸一致 */
+}
