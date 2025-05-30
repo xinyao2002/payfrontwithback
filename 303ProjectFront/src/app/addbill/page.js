@@ -53,34 +53,39 @@ export default function AddBill() {
     fetchCurrentUser();
   }, [router]);
 
+  useEffect(() => {
+    if (scanningIndex !== null) {
+      const scanner = new Html5QrcodeScanner(
+        `reader-${scanningIndex}`,
+        { fps: 10, qrbox: 250 },
+        /* verbose= */ false
+      );
+
+      scanner.render(
+        (decodedText, decodedResult) => {
+          setScanResult(decodedText);
+          // Update the specific participant's username
+          setParticipants(prev => {
+            const updated = [...prev];
+            updated[scanningIndex].username = decodedText;
+            return updated;
+          });
+          scanner.clear(); // Stop scanning after successful scan
+          setScanningIndex(null); // Reset scanning index
+        },
+        (errorMessage) => {
+          // parse error, ignore it.
+        }
+      );
+
+      return () => {
+        scanner.clear(); // Cleanup the scanner on component unmount
+      };
+    }
+  }, [scanningIndex]);
+
   const startScanning = (index) => {
     setScanningIndex(index);
-    const scanner = new Html5QrcodeScanner(
-      `reader-${index}`,
-      { fps: 10, qrbox: 250 },
-      /* verbose= */ false
-    );
-
-    scanner.render(
-      (decodedText, decodedResult) => {
-        setScanResult(decodedText);
-        // Update the specific participant's username
-        setParticipants(prev => {
-          const updated = [...prev];
-          updated[index].username = decodedText;
-          return updated;
-        });
-        scanner.clear(); // Stop scanning after successful scan
-        setScanningIndex(null); // Reset scanning index
-      },
-      (errorMessage) => {
-        // parse error, ignore it.
-      }
-    );
-
-    return () => {
-      scanner.clear(); // Cleanup the scanner on component unmount
-    };
   };
 
   // 添加参与人
