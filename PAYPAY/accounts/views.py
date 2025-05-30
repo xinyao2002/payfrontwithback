@@ -166,6 +166,7 @@ def check_auth(request):
         return JsonResponse({
             'authenticated': True,
             'user': {
+                "id": request.user.id,
                 'username': request.user.username,
                 'email': request.user.email,
                 'first_name': request.user.first_name,

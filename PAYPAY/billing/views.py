@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import BillSplit
 from .services import bill_snapshot
 import json
+from django.db import transaction
 
 class BillListCreate(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -64,6 +65,7 @@ def bill_detail(request, bill_id):
     return JsonResponse(bill_data)
 
 @csrf_exempt
+@transaction.atomic
 def accept_bill(request, bill_id):
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Authentication required'}, status=401)
@@ -72,19 +74,26 @@ def accept_bill(request, bill_id):
         data = json.loads(request.body)
         amount = data.get('amount')
         from .services import accept_split
-        result = accept_split(bill_id, request.user.id, amount)
+        result = accept_split(request.user, bill_id)
+        print("accept_bill: result", result)
+        if result is None:
+            return JsonResponse({'status': 'success'}, safe=False)
         return JsonResponse(result)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
 @csrf_exempt
+@transaction.atomic
 def reject_bill(request, bill_id):
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Authentication required'}, status=401)
     
     try:
         from .services import reject_split
-        result = reject_split(bill_id, request.user.id)
+        result = reject_split(request.user, bill_id)
+        print("reject_bill: result", result)
+        if result is None:
+            return JsonResponse({'status': 'success'}, safe=False)
         return JsonResponse(result)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)

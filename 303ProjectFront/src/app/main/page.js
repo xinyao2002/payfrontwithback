@@ -1,11 +1,10 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import { Typography, Button, Table, Modal } from 'antd';
+import { Typography, Button, Table, Modal, message, Spin, Tag } from 'antd';
 import Image from 'next/image';
 import './MainPage.css';
 import { baseURL } from "../../config.js"; // Import baseURL
 import { useRouter } from 'next/navigation';
-import BillResponse from '../accept/page';
 
 const { Title } = Typography;
 
@@ -13,8 +12,14 @@ export default function MainPage() {
   const router = useRouter();
   const socketRef = useRef(null);
   const [bills, setBills] = useState([]);
-  const [popBill, setPopBill] = useState(null);
   const [myId, setMyId] = useState(null);
+  const [myUsername, setMyUsername] = useState(null);
+  const [pendingSplit, setPendingSplit] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [pendingSplitsQueue, setPendingSplitsQueue] = useState([]);
+  const [initialAuthCheckDone, setInitialAuthCheckDone] = useState(false);
+  const [billsLoading, setBillsLoading] = useState(true);
+  const seenSplits = useRef(new Set()); // <--- Add seenSplits to track processed splits
 
   // 检查登录状态
   useEffect(() => {
@@ -42,14 +47,17 @@ export default function MainPage() {
         
         console.log('Authenticated as:', data.user);
         setMyId(data.user.id);
+        setMyUsername(data.user.username);
       } catch (error) {
         console.error('Auth check error:', error);
         router.push('/reg');
+      } finally {
+        setInitialAuthCheckDone(true);
       }
     };
     
     checkAuth();
-  }, []);
+  }, [router]);
 
   // 获取账单列表
   const fetchBills = async () => {
@@ -76,13 +84,14 @@ export default function MainPage() {
         name: bill.name,
         time: new Date(bill.created_time).toLocaleDateString(),
         status: bill.status,
-        amount: bill.total_amount
+        amount: bill.total_amount,
+        splits: bill.splits
       }));
       setBills(billsData);
       // 调试输出 key
       if (billsData && billsData.length > 0) {
         const keys = billsData.map(b => b.key);
-        console.log("bills to render:", billsData);
+        console.log("bills to render (fetchBills):", billsData);
         console.log("keys:", keys, "unique:", new Set(keys).size === keys.length);
       }
     } catch (error) {
@@ -90,6 +99,8 @@ export default function MainPage() {
       if (error.message.includes('401')) {
         router.push('/reg');
       }
+    } finally {
+      setBillsLoading(false);
     }
   };
 
@@ -107,38 +118,8 @@ export default function MainPage() {
     socket.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
-        console.log('WebSocket data:', data);
-        if (Array.isArray(data)) {
-          // 第一次连接收到账单列表
-          data.forEach(bill => {
-            if (myId && bill.splits) {
-              const mySplit = bill.splits.find(s => s.user_id === myId && s.agree === null);
-              if (mySplit) {
-                setPopBill({
-                  billId: bill.id,
-                  billAmount: mySplit.amount,
-                  senderName: bill.name // 或 bill.created_by
-                });
-              }
-            }
-          });
-        } else {
-          // 后续 bill_update 推送的是单个账单
-          if (myId && data.splits) {
-            const mySplit = data.splits.find(s => s.user_id === myId && s.agree === null);
-            if (mySplit) {
-              setPopBill({
-                billId: data.id,
-                billAmount: mySplit.amount,
-                senderName: data.name // 或 data.created_by
-              });
-            }
-          }
-        }
-        // ...原有 setBills 逻辑...
         setBills(prevBills => {
           if (Array.isArray(data)) {
-            // 如果是账单列表，直接替换
             return data.map(bill => ({
               key: bill.id,
               name: bill.name,
@@ -147,7 +128,6 @@ export default function MainPage() {
               amount: bill.total_amount
             }));
           } else {
-            // 单个账单更新
             const index = prevBills.findIndex(bill => bill.key === data.id);
             if (index !== -1) {
               const newBills = [...prevBills];
@@ -173,8 +153,8 @@ export default function MainPage() {
             }
           }
         });
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
+      } catch (err) {
+        console.error("WebSocket parse error:", err);
       }
     };
 
@@ -196,100 +176,239 @@ export default function MainPage() {
     };
   }, [myId]);
 
+  useEffect(() => {
+    const initiateModalSequenceIfNeeded = (currentBills, currentUsername) => {
+      if (isModalVisible) return;
+
+      const newQueue = [];
+
+      for (const bill of currentBills) {
+        if (Array.isArray(bill.splits)) {
+          for (const split of bill.splits) {
+            const splitKey = `${bill.key}-${split.user}`;  // Unique identifier for each split
+            if (
+              split.user === currentUsername &&
+              split.agree === null &&
+              !seenSplits.current.has(splitKey)
+            ) {
+              seenSplits.current.add(splitKey);
+              newQueue.push({
+                ...split,
+                billId: bill.key,
+                billName: bill.name,
+              });
+            }
+          }
+        }
+      }
+
+      setPendingSplitsQueue(newQueue);
+
+      if (newQueue.length > 0) {
+        setPendingSplit(newQueue[0]);
+        setIsModalVisible(true);
+      }
+    };
+
+    initiateModalSequenceIfNeeded(bills, myUsername);
+  }, [bills, myUsername, isModalVisible]); // 将 isModalVisible 添加到依赖项
+
   const handleCreate = () => {
     router.push('/addbill');
   };
 
-  const columns = [
-    { 
-      title: 'Name', 
-      dataIndex: 'name', 
-      key: 'name',
-      render: (text, record) => (
-        <a onClick={() => {
-          if (record.status === 'unpaid') {
-            router.push(`/accept/${record.key}`);
-          } else {
-            router.push(`/billstatus/${record.key}`);
-          }
-        }}>{text}</a>
-      )
-    },
-    { title: 'Time', dataIndex: 'time', key: 'time' },
-    { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (amount) => `$${amount}` },
-    { 
-      title: 'Status', 
-      dataIndex: 'status', 
-      key: 'status',
-      render: (status) => {
-        const statusColors = {
-          'unpaid': '#faad14',
-          'pending': '#1890ff',
-          'completed': '#52c41a',
-          'failed': '#ff4d4f'
-        };
-        const statusText = {
-          'unpaid': 'Unpaid',
-          'pending': 'Pending',
-          'completed': 'Completed',
-          'failed': 'Failed'
-        };
-        return (
-          <span style={{ color: statusColors[status] }}>
-            {statusText[status]}
-          </span>
-        );
+  const handleModalAction = async (action) => {
+    if (!pendingSplit) return;
+
+    try {
+      // console.log(`Modal action: ${action} for split related to billId: ${pendingSplit.billId}, user: ${pendingSplit.user}, amount: ${pendingSplit.amount}`);
+      
+      // const response = await fetch(`${baseURL}/api/your-split-action-endpoint/`, {
+      //   method: 'POST',
+      //   credentials: 'include',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ 
+      //     billId: pendingSplit.billId, 
+      //     userId: pendingSplit.user_id,
+      //     amount: pendingSplit.amount,
+      //     actionStatus: action
+      //   }) 
+      // });
+
+      const url = action === 'accept' 
+      ? `${baseURL}/api/accept_bill/${pendingSplit.billId}/`
+      : `${baseURL}/api/reject_bill/${pendingSplit.billId}/`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: action === 'accept' ? JSON.stringify({ amount: pendingSplit.amount }) : JSON.stringify({})
+      });     
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`Action failed: ${response.status} - ${errorData}`);
       }
+      message.success(`Split ${action}ed!`);
+      
+      fetchBills();
+
+      const updatedQueue = pendingSplitsQueue.slice(1);
+      setPendingSplitsQueue(updatedQueue);
+
+      if (updatedQueue.length > 0) {
+        setPendingSplit(updatedQueue[0]);
+        setIsModalVisible(true);
+        console.log('Action processed, showing next pending split from queue:', updatedQueue[0]);
+      } else {
+        setIsModalVisible(false);
+        setPendingSplit(null);
+        console.log('Action processed, all pending splits from queue are handled.');
+      }
+
+    } catch(error) {
+      console.error('Failed to update split:', error);
+      message.error(`Failed to update split: ${error.message}`);
+    }
+  };
+
+  const handleModalCloseOrCancel = () => {
+    console.log('Modal closed/cancelled for split:', pendingSplit);
+    
+    const updatedQueue = pendingSplitsQueue.slice(1);
+    setPendingSplitsQueue(updatedQueue);
+
+    if (updatedQueue.length > 0) {
+      setPendingSplit(updatedQueue[0]);
+      setIsModalVisible(true);
+      console.log('Modal closed/cancelled, showing next pending split from queue:', updatedQueue[0]);
+    } else {
+      setIsModalVisible(false);
+      setPendingSplit(null);
+      console.log('Modal closed/cancelled, no more pending splits in queue.');
+    }
+  };
+
+  const columns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text, record) => <a onClick={() => router.push(`/billstatus/${record.key}`)}>{text}</a>,
+    },
+    {
+      title: 'Time',
+      dataIndex: 'time',
+      key: 'time',
+    },
+    {
+      title: 'Amount',
+      dataIndex: 'amount',
+      key: 'amount',
+      render: (amount) => `$${parseFloat(amount).toFixed(2)}`,
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      render: (text, record) => {
+        let displayStatus = record.status;
+        let tagColor = 'default';
+
+        const statusLowerCase = record.status ? record.status.toLowerCase() : '';
+
+        // if (statusLowerCase === 'pending') {
+        //   if (myUsername && Array.isArray(record.splits)) {
+        //     const userSplit = record.splits.find(
+        //       (split) => split.user === myUsername && split.agree === null
+        //     );
+        //     if (userSplit) {
+        //       displayStatus = 'unpaid';
+        //       tagColor = 'volcano';
+        //     } else {
+        //       displayStatus = 'Pending';
+        //       tagColor = 'gold';
+        //     }
+        //   } else {
+        //     displayStatus = 'Pending';
+        //     tagColor = 'gold';
+        //   }
+        // } 
+        if (statusLowerCase === 'pending') {
+          displayStatus = 'Pending';
+          tagColor = 'gold';
+        }
+        
+        else if (statusLowerCase === 'completed') {
+          displayStatus = 'Completed';
+          tagColor = 'green';
+        } else if (statusLowerCase === 'ready') {
+          displayStatus = 'Ready To Pay';
+          tagColor = 'blue';
+        } else if (statusLowerCase === 'failed') {
+          displayStatus = 'Failed';
+          tagColor = 'red';
+        } else {
+          displayStatus = record.status ? record.status.charAt(0).toUpperCase() + record.status.slice(1) : 'Unknown';
+        }
+        return <Tag color={tagColor}>{displayStatus}</Tag>;
+      },
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (text, record) => (
+        <Button onClick={() => router.push(`/billstatus/${record.key}`)}>
+          View Details
+        </Button>
+      ),
     },
   ];
 
+  if (!initialAuthCheckDone || billsLoading) {
+    return (
+      <div className="main-page-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" tip={!initialAuthCheckDone ? "Authenticating..." : "Loading Bills..."} />
+      </div>
+    );
+  }
+
   return (
-    <div className="main-page">
-      <Title level={3} className="welcome-title">
-        Welcome to <span className="brand">PayPay</span> 🎉
-      </Title>
-
-      <Button type="primary" className="create-button" onClick={handleCreate}>
-        + CREATE
-      </Button>
-
-      <div className="transaction-section">
-        <h4>Transactions</h4>
-        <Table
-          dataSource={bills}
-          columns={columns}
-          rowKey="key"
-          pagination={false}
-          size="small"
-          className="transaction-table"
-        />
+    <div className="main-page-container">
+      <div className="header-container">
+        <Title level={2} className="main-title">My Bills</Title>
+        <Button type="primary" onClick={handleCreate} className="create-bill-button">
+          Create New Bill
+        </Button>
       </div>
+      
+      <Table 
+        columns={columns} 
+        dataSource={bills} 
+        rowKey="key"
+        className="bills-table" 
+      />
 
-      <div className="bottom-nav">
-        <div className="nav-item">
-          <Image src="/avatar/yuan-icon.svg" width={24} height={24} alt="home" />
-        </div>
-        <div className="divider" />
-        <div className="nav-item">
-          <Image src="/avatar/profile-icon.svg" width={24} height={24} alt="profile" />
-        </div>
-      </div>
-
-      {/* 页面底部渲染弹窗 */}
-      {popBill && (
+      {pendingSplit && (
         <Modal
-          open={!!popBill}
-          onCancel={() => setPopBill(null)}
-          footer={null}
-          closable={false}
-          maskClosable={false}
-          centered
+          title={`Bill Split: ${pendingSplit.billName}`}
+          visible={isModalVisible}
+          onCancel={handleModalCloseOrCancel}
+          footer={[
+            <Button key="refuse" danger onClick={() => handleModalAction('refuse')}>
+              Refuse
+            </Button>,
+            <Button key="accept" type="primary" onClick={() => handleModalAction('accept')}>
+              Accept
+            </Button>,
+          ]}
         >
-          <BillResponse
-            billId={popBill.billId}
-            billAmount={popBill.billAmount}
-            senderName={popBill.senderName}
-          />
+          <p>You have a pending bill split of <Typography.Text strong>${parseFloat(pendingSplit.amount).toFixed(2)}</Typography.Text> for the bill "{pendingSplit.billName}".</p>
+          <p>Do you want to accept or refuse this split?</p>
         </Modal>
       )}
     </div>

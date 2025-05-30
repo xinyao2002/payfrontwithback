@@ -60,7 +60,8 @@ INSTALLED_APPS = [
     'accounts',
     'rest_framework',
     'corsheaders',
-    'billing',
+    #'billing',
+    "billing.apps.BillingConfig",
 ]
 
 MIDDLEWARE = [
@@ -76,7 +77,7 @@ MIDDLEWARE = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Next.js 前端
+    "http://localhost:3000", 
 ]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",

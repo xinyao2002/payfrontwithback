@@ -61,5 +61,5 @@ def bill_snapshot(bill_id):
     bill = Bill.objects.prefetch_related("splits__user").get(id=bill_id)
     from .serializers import BillSer
     data = BillSer(bill).data
-    print("bill_snapshot data:", data)
+    #print("bill_snapshot data:", data)
     return data
