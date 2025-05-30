@@ -35,15 +35,33 @@ export default function ProfilePage() {
           return;
         }
 
-        // 这里假设后端 data.user 返回 { id, username, total_spend, month_spend, num_bills }
+        // 这里假设后端 data.user 返回 { id, username }
+        const userId = data.user.id;
+        const username = data.user.username;
+
+        // Fetch personal bill data
+        const billResponse = await fetch(`${baseURL}/api/personalbill/`, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+
+        if (!billResponse.ok) {
+          throw new Error('Failed to fetch personal bill data');
+        }
+
+        const billData = await billResponse.json();
+
         setUserInfo({
-          id: data.user.id,
-          username: data.user.username,
-          totalSpend: data.user.total_spend ?? 0,
-          monthSpend: data.user.month_spend ?? 0,
-          numBills: data.user.num_bills ?? 0,
+          id: userId,
+          username: username,
+          totalSpend: billData.total_spend ?? 0,
+          monthSpend: billData.month_spend ?? 0,
+          numBills: billData.num_bills ?? 0,
         });
       } catch (error) {
+        console.error('Error fetching user info or personal bill data:', error);
         router.push('/reg');
       } finally {
         setLoading(false);
@@ -71,7 +89,7 @@ export default function ProfilePage() {
   }
 
   // 二维码内容，可按实际需求调整
-  const qrContent = `https://yourapp.com/profile/${userInfo.id}`;
+  const qrContent = `https://localhost:3000/profile/${userInfo.username}`;
 
   return (
     <div className="profile-page">
@@ -88,11 +106,11 @@ export default function ProfilePage() {
       {/* 动态二维码 */}
       <div className="profile-qrcode" style={{ textAlign: 'center', margin: '20px 0' }}>
         <QRCode
-          value={qrContent}
+          value={userInfo.username}
           size={120}
           style={{ width: 120, height: 120 }}
         />
-        <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>扫码访问我的主页</div>
+        <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>fetchmyusername</div>
       </div>
 
       <Title level={4} className="profile-name">{userInfo.username}</Title>

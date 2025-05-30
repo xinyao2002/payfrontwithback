@@ -147,6 +147,33 @@ export default function MainPage() {
             }
           }
         });
+
+        // Check for new pending splits and show modal if needed
+        const newQueue = [];
+        if (Array.isArray(data.splits)) {
+          for (const split of data.splits) {
+            const splitKey = `${data.id}-${split.user}`;
+            if (
+              split.user === myUsername &&
+              split.agree === null &&
+              !seenSplits.current.has(splitKey)
+            ) {
+              seenSplits.current.add(splitKey);
+              newQueue.push({
+                ...split,
+                billId: data.id,
+                billName: data.name,
+              });
+            }
+          }
+        }
+
+        if (newQueue.length > 0) {
+          setPendingSplitsQueue(newQueue);
+          setPendingSplit(newQueue[0]);
+          setIsModalVisible(true);
+        }
+
       } catch (err) {
         console.error("WebSocket parse error:", err);
       }

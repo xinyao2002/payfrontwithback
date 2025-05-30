@@ -1,9 +1,10 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Typography, Form, Input, Button, message, Space } from "antd";
 import { baseURL } from "../../config.js";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 const { Title } = Typography;
 const getCookie = (name) => {
@@ -14,7 +15,73 @@ export default function AddBill() {
   const [form] = Form.useForm();
   const [participants, setParticipants] = useState([{ username: "", amount: "" }]);
   const [loading, setLoading] = useState(false);
+  const [scanResult, setScanResult] = useState(null);
+  const [scanningIndex, setScanningIndex] = useState(null); // Track which participant is being scanned
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch(`${baseURL}/accounts/check-auth/`, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+
+        if (!response.ok) {
+          console.log('Not authenticated, redirecting to login...');
+          router.push('/reg');
+          return;
+        }
+
+        const data = await response.json();
+        if (!data.authenticated) {
+          console.log('Not authenticated, redirecting to login...');
+          router.push('/reg');
+          return;
+        }
+
+        console.log('Authenticated as:', data.user);
+        setParticipants([{ username: data.user.username, amount: "" }]);
+      } catch (error) {
+        console.error('Auth check error:', error);
+        router.push('/reg');
+      }
+    };
+
+    fetchCurrentUser();
+  }, [router]);
+
+  const startScanning = (index) => {
+    setScanningIndex(index);
+    const scanner = new Html5QrcodeScanner(
+      `reader-${index}`,
+      { fps: 10, qrbox: 250 },
+      /* verbose= */ false
+    );
+
+    scanner.render(
+      (decodedText, decodedResult) => {
+        setScanResult(decodedText);
+        // Update the specific participant's username
+        setParticipants(prev => {
+          const updated = [...prev];
+          updated[index].username = decodedText;
+          return updated;
+        });
+        scanner.clear(); // Stop scanning after successful scan
+        setScanningIndex(null); // Reset scanning index
+      },
+      (errorMessage) => {
+        // parse error, ignore it.
+      }
+    );
+
+    return () => {
+      scanner.clear(); // Cleanup the scanner on component unmount
+    };
+  };
 
   // 添加参与人
   const handleAddParticipant = () => {
@@ -46,6 +113,15 @@ export default function AddBill() {
     try {
       setLoading(true);
       const values = await form.validateFields();
+
+      // 验证参与者金额总和
+      const totalAmount = parseFloat(values.TotalAmount);
+      const sumOfSplits = participants.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+      if (sumOfSplits !== totalAmount) {
+        message.error("The sum of participant amounts must equal the total amount.");
+        return;
+      }
+
       // 查找所有 user_id
       const splits = [];
       for (const p of participants) {
@@ -53,12 +129,14 @@ export default function AddBill() {
         const user_id = await fetchUserId(p.username.trim());
         splits.push({ user_id, amount: parseFloat(p.amount) });
       }
+
       // 组装 payload
       const payload = {
         name: values.billName,
-        total_amount: parseFloat(values.TotalAmount),
+        total_amount: totalAmount,
         splits,
       };
+
       // 提交到后端
       const csrfToken = getCookie('csrftoken');
       console.log('csrftoken =', csrfToken); 
@@ -120,6 +198,7 @@ export default function AddBill() {
               onChange={e => handleParticipantChange(idx, "amount", e.target.value)}
               style={{ width: 100 }}
             />
+            <Button onClick={() => startScanning(idx)}>Scan QR</Button>
             {participants.length > 1 && (
               <Button danger onClick={() => handleRemoveParticipant(idx)}>
                 Delete
@@ -142,6 +221,11 @@ export default function AddBill() {
           </Button>
         </Form.Item>
       </Form>
+
+      {/* QR Code Scanner for each participant */}
+      {scanningIndex !== null && (
+        <div id={`reader-${scanningIndex}`} style={{ width: '100%' }}></div>
+      )}
 
       {/* --- 底部菜单栏 --- */}
       <div className="bottom-nav">

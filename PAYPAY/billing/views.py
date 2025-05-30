@@ -8,6 +8,8 @@ from .models import BillSplit
 from .services import bill_snapshot
 import json
 from django.db import transaction
+from django.utils import timezone
+from django.db import models
 
 class BillListCreate(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -20,6 +22,26 @@ class BillListCreate(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         
         create_bill(serializer, self.request)
+@csrf_exempt
+def personal_bill(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required'}, status=401)
+
+    # Calculate total spend
+    total_spend = BillSplit.objects.filter(user=request.user).aggregate(total=models.Sum('amount'))['total'] or 0
+
+    # Calculate month spend
+    now = timezone.now()
+    month_spend = BillSplit.objects.filter(user=request.user, responded_at__year=now.year, responded_at__month=now.month).aggregate(total=models.Sum('amount'))['total'] or 0
+
+    # Calculate number of bills
+    num_bills = Bill.objects.filter(splits__user=request.user).distinct().count()
+
+    return JsonResponse({
+        'total_spend': total_spend,
+        'month_spend': month_spend,
+        'num_bills': num_bills
+    })
 
 @csrf_exempt
 def bill_list(request):
