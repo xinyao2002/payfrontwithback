@@ -107,15 +107,25 @@ export default function ProfilePage() {
         Log Out
       </Button>
 
+      {/* --- 底部菜单栏 --- */}
       <div className="bottom-nav">
-        <div className="nav-item">
-          <Image src="/avatar/yuan-icon.svg" width={24} height={24} alt="icon" />
+        <div
+          className="nav-item"
+          onClick={() => router.push('/main')}
+          style={{ cursor: 'pointer' }}
+        >
+          <Image src="/avatar/yuan-icon.svg" width={24} height={24} alt="main" />
         </div>
         <div className="divider" />
-        <div className="nav-item">
-          <Image src="/avatar/profile-icon.svg" width={24} height={24} alt="icon" />
+        <div
+          className="nav-item"
+          onClick={() => router.push('/profile')}
+          style={{ cursor: 'pointer' }}
+        >
+          <Image src="/avatar/profile-icon.svg" width={24} height={24} alt="profile" />
         </div>
       </div>
+
     </div>
   );
 }

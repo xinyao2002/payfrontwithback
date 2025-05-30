@@ -19,7 +19,7 @@ export default function MainPage() {
   const [pendingSplitsQueue, setPendingSplitsQueue] = useState([]);
   const [initialAuthCheckDone, setInitialAuthCheckDone] = useState(false);
   const [billsLoading, setBillsLoading] = useState(true);
-  const seenSplits = useRef(new Set()); // <--- Add seenSplits to track processed splits
+  const seenSplits = useRef(new Set());
 
   // 检查登录状态
   useEffect(() => {
@@ -88,12 +88,6 @@ export default function MainPage() {
         splits: bill.splits
       }));
       setBills(billsData);
-      // 调试输出 key
-      if (billsData && billsData.length > 0) {
-        const keys = billsData.map(b => b.key);
-        console.log("bills to render (fetchBills):", billsData);
-        console.log("keys:", keys, "unique:", new Set(keys).size === keys.length);
-      }
     } catch (error) {
       console.error('Error fetching bills:', error);
       if (error.message.includes('401')) {
@@ -185,7 +179,7 @@ export default function MainPage() {
       for (const bill of currentBills) {
         if (Array.isArray(bill.splits)) {
           for (const split of bill.splits) {
-            const splitKey = `${bill.key}-${split.user}`;  // Unique identifier for each split
+            const splitKey = `${bill.key}-${split.user}`;
             if (
               split.user === currentUsername &&
               split.agree === null &&
@@ -211,7 +205,7 @@ export default function MainPage() {
     };
 
     initiateModalSequenceIfNeeded(bills, myUsername);
-  }, [bills, myUsername, isModalVisible]); // 将 isModalVisible 添加到依赖项
+  }, [bills, myUsername, isModalVisible]);
 
   const handleCreate = () => {
     router.push('/addbill');
@@ -221,22 +215,6 @@ export default function MainPage() {
     if (!pendingSplit) return;
 
     try {
-      // console.log(`Modal action: ${action} for split related to billId: ${pendingSplit.billId}, user: ${pendingSplit.user}, amount: ${pendingSplit.amount}`);
-      
-      // const response = await fetch(`${baseURL}/api/your-split-action-endpoint/`, {
-      //   method: 'POST',
-      //   credentials: 'include',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ 
-      //     billId: pendingSplit.billId, 
-      //     userId: pendingSplit.user_id,
-      //     amount: pendingSplit.amount,
-      //     actionStatus: action
-      //   }) 
-      // });
-
       const url = action === 'accept' 
       ? `${baseURL}/api/accept_bill/${pendingSplit.billId}/`
       : `${baseURL}/api/reject_bill/${pendingSplit.billId}/`;
@@ -264,11 +242,9 @@ export default function MainPage() {
       if (updatedQueue.length > 0) {
         setPendingSplit(updatedQueue[0]);
         setIsModalVisible(true);
-        console.log('Action processed, showing next pending split from queue:', updatedQueue[0]);
       } else {
         setIsModalVisible(false);
         setPendingSplit(null);
-        console.log('Action processed, all pending splits from queue are handled.');
       }
 
     } catch(error) {
@@ -278,19 +254,15 @@ export default function MainPage() {
   };
 
   const handleModalCloseOrCancel = () => {
-    console.log('Modal closed/cancelled for split:', pendingSplit);
-    
     const updatedQueue = pendingSplitsQueue.slice(1);
     setPendingSplitsQueue(updatedQueue);
 
     if (updatedQueue.length > 0) {
       setPendingSplit(updatedQueue[0]);
       setIsModalVisible(true);
-      console.log('Modal closed/cancelled, showing next pending split from queue:', updatedQueue[0]);
     } else {
       setIsModalVisible(false);
       setPendingSplit(null);
-      console.log('Modal closed/cancelled, no more pending splits in queue.');
     }
   };
 
@@ -320,29 +292,10 @@ export default function MainPage() {
         let tagColor = 'default';
 
         const statusLowerCase = record.status ? record.status.toLowerCase() : '';
-
-        // if (statusLowerCase === 'pending') {
-        //   if (myUsername && Array.isArray(record.splits)) {
-        //     const userSplit = record.splits.find(
-        //       (split) => split.user === myUsername && split.agree === null
-        //     );
-        //     if (userSplit) {
-        //       displayStatus = 'unpaid';
-        //       tagColor = 'volcano';
-        //     } else {
-        //       displayStatus = 'Pending';
-        //       tagColor = 'gold';
-        //     }
-        //   } else {
-        //     displayStatus = 'Pending';
-        //     tagColor = 'gold';
-        //   }
-        // } 
         if (statusLowerCase === 'pending') {
           displayStatus = 'Pending';
           tagColor = 'gold';
         }
-        
         else if (statusLowerCase === 'completed') {
           displayStatus = 'Completed';
           tagColor = 'green';
@@ -378,7 +331,7 @@ export default function MainPage() {
   }
 
   return (
-    <div className="main-page-container">
+    <div className="main-page-container" style={{ paddingBottom: 64 }}> {/* 为底部导航留空间 */}
       <div className="header-container">
         <Title level={2} className="main-title">My Bills</Title>
         <Button type="primary" onClick={handleCreate} className="create-bill-button">
@@ -396,7 +349,7 @@ export default function MainPage() {
       {pendingSplit && (
         <Modal
           title={`Bill Split: ${pendingSplit.billName}`}
-          visible={isModalVisible}
+          open={isModalVisible}
           onCancel={handleModalCloseOrCancel}
           footer={[
             <Button key="refuse" danger onClick={() => handleModalAction('refuse')}>
@@ -411,6 +364,25 @@ export default function MainPage() {
           <p>Do you want to accept or refuse this split?</p>
         </Modal>
       )}
+
+      {/* --- 底部菜单栏 --- */}
+      <div className="bottom-nav">
+        <div
+          className="nav-item"
+          onClick={() => router.push('/main')}
+          style={{ cursor: 'pointer' }}
+        >
+          <Image src="/avatar/yuan-icon.svg" width={24} height={24} alt="main" />
+        </div>
+        <div className="divider" />
+        <div
+          className="nav-item"
+          onClick={() => router.push('/profile')}
+          style={{ cursor: 'pointer' }}
+        >
+          <Image src="/avatar/profile-icon.svg" width={24} height={24} alt="profile" />
+        </div>
+      </div>
     </div>
   );
 }

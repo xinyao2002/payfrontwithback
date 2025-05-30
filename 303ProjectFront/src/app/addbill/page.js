@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Typography, Form, Input, Button, message, Space } from "antd";
 import { baseURL } from "../../config.js";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const { Title } = Typography;
 const getCookie = (name) => {
@@ -59,12 +60,6 @@ export default function AddBill() {
         splits,
       };
       // 提交到后端
-      // const res = await fetch(`${baseURL}/api/create/`, {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   credentials: "include",
-      //   body: JSON.stringify(payload),
-      // });
       const csrfToken = getCookie('csrftoken');
       console.log('csrftoken =', csrfToken); 
 
@@ -91,7 +86,7 @@ export default function AddBill() {
   };
 
   return (
-    <div style={{ maxWidth: 500, margin: "0 auto" }}>
+    <div style={{ maxWidth: 500, margin: "0 auto", paddingBottom: 80 }}>
       <Title level={2}>Add a New Bill</Title>
       <Form form={form} layout="vertical">
         <Form.Item
@@ -147,6 +142,25 @@ export default function AddBill() {
           </Button>
         </Form.Item>
       </Form>
+
+      {/* --- 底部菜单栏 --- */}
+      <div className="bottom-nav">
+        <div
+          className="nav-item"
+          onClick={() => router.push('/main')}
+          style={{ cursor: 'pointer' }}
+        >
+          <Image src="/avatar/yuan-icon.svg" width={24} height={24} alt="main" />
+        </div>
+        <div className="divider" />
+        <div
+          className="nav-item"
+          onClick={() => router.push('/profile')}
+          style={{ cursor: 'pointer' }}
+        >
+          <Image src="/avatar/profile-icon.svg" width={24} height={24} alt="profile" />
+        </div>
+      </div>
     </div>
   );
 }
