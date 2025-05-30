@@ -34,6 +34,8 @@ def register_view(request):
 
             if User.objects.filter(username=username).exists():
                 return JsonResponse({'error': 'Username already taken'}, status=400)
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'error': 'Email already taken'}, status=400)
 
             user = User.objects.create_user(
                 username=username,
