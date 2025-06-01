@@ -1,0 +1,175 @@
+.resetPwdTitle {
+    margin-left: 58px;
+    margin-top: 96px;
+}
+.resetContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 64px;
+}
+
+.resetForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inputItem {
+  margin-bottom: 38px;
+  width: 239px;
+}
+
+.passwordInput {
+  border-radius: 20px !important;
+  width: 239px !important;
+  height: 39px !important;
+  font-size: 20px !important;
+  font-weight: 600;
+}
+
+
+
+.sendBtn {
+    width: 267px !important;
+    height: 58px !important;
+    background-color: #0d288b !important;
+    margin-top: 85px !important;
+    
+
+    .sendWord {
+        text-align: center;
+        margin-top: auto;
+        margin-bottom: auto;
+        color: #ffffff !important;
+    }
+}
+
+
+.ant-input-number {
+  border-radius: 20px !important;
+  width: 239px !important;
+  height: 39px !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  padding-left: 12px;
+}
+
+/* 修改 InputNumber 中的文字样式 */
+.ant-input-number-input {
+  height: 100% !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+}
+
+/* 设置 placeholder 样式（InputNumber 的 placeholder 是通过 input 的原生 placeholder 实现的） */
+.ant-input-number-input::placeholder {
+  font-size: 20px !important;
+  font-weight: 500 !important;
+  color: #bfbfbf !important;
+}
+
+.container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.remaining {
+  color: #666;
+  font-size: 14px;
+}
+
+.form {
+  flex: 1;
+}
+
+.input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 0 15px;
+  margin-bottom: 20px;
+}
+
+.participantRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.userInput {
+  flex: 2;
+  height: 40px;
+  border-radius: 8px;
+  margin-right: 10px;
+}
+
+.amountInput {
+  flex: 1;
+  height: 40px;
+  border-radius: 8px;
+  margin-right: 10px;
+}
+
+.equallyRow {
+  display: flex;
+  justify-content: flex-end;
+  margin: 20px 0;
+}
+
+.submitButton {
+  width: 100%;
+  height: 48px;
+  border-radius: 24px;
+  background-color: #1a237e;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.scanner {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navItem {
+  padding: 0 30px;
+  cursor: pointer;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: #e8e8e8;
+}

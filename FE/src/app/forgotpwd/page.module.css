@@ -1,0 +1,65 @@
+.backBtnLine {
+  display: flex;
+  justify-content: left;
+  margin-left: 41px;
+  margin-top: 64px;
+  margin-bottom: 0px;
+}
+
+.backBtn {
+  color: black !important;
+  font-size: 20px;            /* Increase font size */
+  font-weight: 600;
+  height: 48px;               /* Increase button height */
+  padding: 0px !important;    /* Add left and right padding */
+  display: flex;
+  align-items: center;
+  gap: 10px;                  /* Space between icon and text */
+}
+
+.forgotPwdTitle {
+    margin-left: 56px;
+}
+.emailInputContainer {
+  margin-top: 17px !important;
+  margin-left: 92px;
+}
+
+.emailInputTitle {
+  font-size: 18px;
+  color: #6b6464;
+  margin-bottom: 8px;
+  line-height: 24px;
+}
+
+.emailInput {
+  border-radius: 20px !important;
+  margin-top: 8px;
+  width: 216px !important;
+  height: 42px !important;
+  font-size: 16px; /* Control input content font size */
+
+  margin-top: 0px !important;
+}
+
+/* Modify placeholder font size and color to match Title 3 style */
+.emailInput::placeholder {
+  font-size: 20px;
+  font-weight: 500;
+  color: #bfbfbf; /* Color can be modified as needed */
+}
+
+.sendBtn {
+    width: 154px !important;
+    height: 58px !important;
+    background-color: #0d288b !important;
+    margin-top: 52px !important;
+    margin-left: 31px !important;
+
+    .sendWord {
+        text-align: center;
+        margin-top: auto;
+        margin-bottom: auto;
+        color: #ffffff !important;
+    }
+}
