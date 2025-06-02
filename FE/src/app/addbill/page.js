@@ -13,6 +13,28 @@ const getCookie = (name) => {
   const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'));
   return match ? decodeURIComponent(match[2]) : null;
 };
+
+// Add this new function at the top level
+const calculateEqualSplit = (total, numParticipants) => {
+  // Calculate base amount per person (truncated to 2 decimal places)
+  const baseAmount = Math.floor((total / numParticipants) * 100) / 100;
+  
+  // Calculate the remainder in cents
+  const totalInCents = Math.round(total * 100);
+  const baseAmountInCents = Math.floor(baseAmount * 100);
+  const remainderCents = totalInCents - (baseAmountInCents * numParticipants);
+  
+  // Create the split amounts array
+  const splits = new Array(numParticipants).fill(baseAmount.toFixed(2));
+  
+  // Distribute the remainder one cent at a time
+  for (let i = 0; i < remainderCents; i++) {
+    splits[i] = (baseAmount + 0.01).toFixed(2);
+  }
+  
+  return splits;
+};
+
 export default function AddBill() {
   const [form] = Form.useForm();
   const [participants, setParticipants] = useState([{ username: "", amount: "" }]);
@@ -42,22 +64,18 @@ export default function AddBill() {
         });
 
         if (!response.ok) {
-          console.log('Not authenticated, redirecting to login...');
           router.push('/reg');
           return;
         }
 
         const data = await response.json();
         if (!data.authenticated) {
-          console.log('Not authenticated, redirecting to login...');
           router.push('/reg');
           return;
         }
 
-        console.log('Authenticated as:', data.user);
         setParticipants([{ username: data.user.username, amount: "" }]);
       } catch (error) {
-        console.error('Auth check error:', error);
         router.push('/reg');
       }
     };
@@ -65,42 +83,28 @@ export default function AddBill() {
     fetchCurrentUser();
   }, [router]);
 
-  // Handle equally split when total amount changes
-  useEffect(() => {
-    if (isEqually && totalAmount > 0) {
-      const equalAmount = (totalAmount / participants.length).toFixed(2);
-      const newParticipants = participants.map(p => ({
-        ...p,
-        amount: equalAmount
-      }));
-      setParticipants(newParticipants);
-    }
-  }, [isEqually, totalAmount, participants.length]);
-
   const handleTotalAmountChange = (value) => {
     const newTotal = parseFloat(value) || 0;
     setTotalAmount(newTotal);
     form.setFieldsValue({ TotalAmount: newTotal });
     
     if (isEqually && newTotal > 0) {
-      const equalAmount = (newTotal / participants.length).toFixed(2);
-      const newParticipants = participants.map(p => ({
+      const splitAmounts = calculateEqualSplit(newTotal, participants.length);
+      setParticipants(prev => prev.map((p, index) => ({
         ...p,
-        amount: equalAmount
-      }));
-      setParticipants(newParticipants);
+        amount: splitAmounts[index]
+      })));
     }
   };
 
   const handleEquallyChange = (checked) => {
     setIsEqually(checked);
     if (checked && totalAmount > 0) {
-      const equalAmount = (totalAmount / participants.length).toFixed(2);
-      const newParticipants = participants.map(p => ({
+      const splitAmounts = calculateEqualSplit(totalAmount, participants.length);
+      setParticipants(prev => prev.map((p, index) => ({
         ...p,
-        amount: equalAmount
-      }));
-      setParticipants(newParticipants);
+        amount: splitAmounts[index]
+      })));
     }
   };
 
@@ -140,30 +144,45 @@ export default function AddBill() {
 
   // Add participant
   const handleAddParticipant = () => {
-    const newParticipant = { username: "", amount: isEqually ? (totalAmount / (participants.length + 1)).toFixed(2) : "" };
-    setParticipants([...participants, newParticipant]);
+    if (isEqually && totalAmount > 0) {
+      const newLength = participants.length + 1;
+      const splitAmounts = calculateEqualSplit(totalAmount, newLength);
+      setParticipants(prev => {
+        const newParticipants = prev.map((p, index) => ({
+          ...p,
+          amount: splitAmounts[index]
+        }));
+        newParticipants.push({ username: "", amount: splitAmounts[newLength - 1] });
+        return newParticipants;
+      });
+    } else {
+      setParticipants(prev => [...prev, { username: "", amount: "" }]);
+    }
   };
 
   // Remove participant
   const handleRemoveParticipant = (idx) => {
-    const newParticipants = participants.filter((_, i) => i !== idx);
-    setParticipants(newParticipants);
-    if (isEqually && totalAmount > 0) {
-      const equalAmount = (totalAmount / newParticipants.length).toFixed(2);
-      const updatedParticipants = newParticipants.map(p => ({
-        ...p,
-        amount: equalAmount
-      }));
-      setParticipants(updatedParticipants);
-    }
+    setParticipants(prev => {
+      const newParticipants = prev.filter((_, i) => i !== idx);
+      if (isEqually && totalAmount > 0) {
+        const splitAmounts = calculateEqualSplit(totalAmount, newParticipants.length);
+        return newParticipants.map((p, index) => ({
+          ...p,
+          amount: splitAmounts[index]
+        }));
+      }
+      return newParticipants;
+    });
   };
 
   // Modify participant
   const handleParticipantChange = (idx, field, value) => {
     if (isEqually && field === 'amount') return;
-    const newList = [...participants];
-    newList[idx][field] = value;
-    setParticipants(newList);
+    setParticipants(prev => {
+      const newList = [...prev];
+      newList[idx][field] = value;
+      return newList;
+    });
   };
 
   // Find user_id corresponding to username
@@ -197,6 +216,13 @@ export default function AddBill() {
         splits.push({ user_id, amount: parseFloat(p.amount) });
       }
 
+      // Validate that split amounts sum up to total
+      const splitSum = splits.reduce((sum, split) => sum + parseFloat(split.amount), 0);
+      if (Math.abs(splitSum - totalAmount) > 0.01) {
+        message.error("Split amounts do not sum up to total amount");
+        return;
+      }
+
       const payload = {
         name: values.billName,
         total_amount: totalAmount,
@@ -204,7 +230,6 @@ export default function AddBill() {
       };
 
       const csrfToken = getCookie('csrftoken');
-      console.log('csrftoken =', csrfToken); 
 
       const res = await fetch(`${baseURL}/api/create/`, {
         method: "POST",

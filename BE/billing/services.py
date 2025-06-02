@@ -39,13 +39,18 @@ def create_bill(serializer, request):
     # If we're splitting equally, handle the remainder
     if len(splits_data) > 0 and all(abs(float(splits_data[0]["amount"]) - float(s["amount"])) < 0.01 for s in splits_data):
         # This is an equal split, distribute any remainder
-        equal_amount = total_amount / len(splits_data)
-        base_amount = int(equal_amount * 100) / 100  # Truncate to 2 decimal places
-        remainder_cents = int((total_amount - (base_amount * len(splits_data))) * 100)
+        base_amount = int((total_amount / len(splits_data)) * 100) / 100  # Truncate to 2 decimal places
+        total_in_cents = round(total_amount * 100)
+        base_amount_in_cents = int(base_amount * 100)
+        remainder_cents = total_in_cents - (base_amount_in_cents * len(splits_data))
         
         # Distribute the remainder one cent at a time
         for i in range(remainder_cents):
-            splits_data[i % len(splits_data)]["amount"] = str(float(splits_data[i % len(splits_data)]["amount"]) + 0.01)
+            splits_data[i]["amount"] = str(float(base_amount) + 0.01)
+        
+        # Set remaining splits to base amount
+        for i in range(remainder_cents, len(splits_data)):
+            splits_data[i]["amount"] = str(base_amount)
     
     bill = serializer.save(created_by=request.user)
     for s in splits_data:
