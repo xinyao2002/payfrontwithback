@@ -27,6 +27,26 @@ def notify_bill_update(bill):
 @transaction.atomic
 def create_bill(serializer, request):
     splits_data = request.data.get("splits", [])
+    total_amount = float(request.data.get("total_amount", 0))
+    
+    # Calculate total of splits
+    total_splits = sum(float(s["amount"]) for s in splits_data)
+    
+    # Check if totals match (within rounding error)
+    if abs(total_splits - total_amount) > 0.01:
+        raise ValueError("Total amount does not match sum of splits")
+    
+    # If we're splitting equally, handle the remainder
+    if len(splits_data) > 0 and all(abs(float(splits_data[0]["amount"]) - float(s["amount"])) < 0.01 for s in splits_data):
+        # This is an equal split, distribute any remainder
+        equal_amount = total_amount / len(splits_data)
+        base_amount = int(equal_amount * 100) / 100  # Truncate to 2 decimal places
+        remainder_cents = int((total_amount - (base_amount * len(splits_data))) * 100)
+        
+        # Distribute the remainder one cent at a time
+        for i in range(remainder_cents):
+            splits_data[i % len(splits_data)]["amount"] = str(float(splits_data[i % len(splits_data)]["amount"]) + 0.01)
+    
     bill = serializer.save(created_by=request.user)
     for s in splits_data:
         BillSplit.objects.create(

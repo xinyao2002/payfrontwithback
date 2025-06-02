@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Typography, Spin, Button, List, Avatar, Tag, message, Modal, Card } from 'antd';
+import { Typography, Button, List, Avatar, Tag, message, Modal, Card } from 'antd';
 import { ArrowLeftOutlined, WifiOutlined } from '@ant-design/icons';
 import { baseURL } from '../../../config'; // Make sure the path is correct
 import Image from 'next/image';
@@ -29,6 +29,7 @@ export default function BillStatusPage() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [virtualCard, setVirtualCard] = useState(null);
   const [nfcSupported, setNfcSupported] = useState(false);
+  const socketRef = useRef(null);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -49,34 +50,43 @@ export default function BillStatusPage() {
 
   useEffect(() => {
     if (billId) {
-      const fetchBillDetails = async () => {
-        setLoading(true);
-        setError(null);
+      // Setup WebSocket connection
+      const wsUrl = `${baseURL.replace('http', 'ws')}/ws/bill/${billId}/`;
+      const socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
+
+      socket.onopen = () => {
+        console.log('WebSocket connected for bill status');
+      };
+
+      socket.onmessage = (e) => {
         try {
-          const response = await fetch(`${baseURL}/api/${billId}/`, {
-            credentials: 'include',
-            headers: { 'Accept': 'application/json' },
-          });
-          if (!response.ok) {
-            if (response.status === 401) {
-              router.push('/reg');
-              return;
-            }
-            const errorData = await response.json().catch(() => ({ detail: 'Failed to load bill details.' }));
-            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
+          const data = JSON.parse(e.data);
+          console.log('Received bill update:', data);
           setBill(data);
-        } catch (err) {
-          setError(err.message);
-          message.error(err.message);
-        } finally {
           setLoading(false);
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err);
         }
       };
-      fetchBillDetails();
+
+      socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setError('Failed to connect to real-time updates');
+      };
+
+      socket.onclose = () => {
+        console.log('WebSocket disconnected');
+      };
+
+      // Cleanup function
+      return () => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.close();
+        }
+      };
     }
-  }, [billId, router]);
+  }, [billId]);
 
   useEffect(() => {
     // Check if NFC is supported
@@ -131,7 +141,6 @@ export default function BillStatusPage() {
   if (loading) {
     return (
       <div className="status-page-container">
-        <Spin size="large" />
         {/* --- Bottom Menu Bar --- */}
         <div className="bottom-nav">
           <div className="nav-item" onClick={() => router.push('/main')} style={{ cursor: 'pointer' }}>

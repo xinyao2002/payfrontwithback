@@ -6,13 +6,15 @@ import { ArrowLeftOutlined } from "@ant-design/icons";
 const { Title, Text } = Typography;
 import { useRouter } from "next/navigation";
 import { baseURL } from "../../config.js"; // Import baseURL
+import BackButton from "../../components/BackButton";
 
 export default function ForgotPassword() {
   const forgotPwdAPI = `${baseURL}/accounts/forgot-password/`;
   const [form] = Form.useForm();
   const router = useRouter();
+  
   // Go Back to main page
-  const handelBack = () => {
+  const handleBack = () => {
     router.push("/");
   };
 
@@ -45,19 +47,7 @@ export default function ForgotPassword() {
 
   return (
     <div>
-      <div className={styles.backBtnLine}>
-        <Button
-          type="link"
-          icon={<ArrowLeftOutlined style={{ fontSize: "20px" }} />}
-          className={styles.backBtn}
-          onClick={handelBack}
-        >
-          <span style={{ fontSize: "20px", fontWeight: "bold" }}>Back</span>{" "}
-          <Text type="secondary" style={{ fontSize: "15px !important" }}>
-            Log In Page
-          </Text>
-        </Button>
-      </div>
+      <BackButton onClick={handleBack} />
       <div className={styles.forgotPwdTitle}>
         <Title level={1} className={styles.forgotPwdWord}>
           Forgot Password

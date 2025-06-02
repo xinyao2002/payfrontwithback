@@ -1,11 +1,12 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Typography, Button, Spin } from 'antd';
+import { Typography, Button, Spin, message } from 'antd';
 import Image from 'next/image';
 import QRCode from 'react-qr-code';
 import './profile.css';
 import { useRouter } from 'next/navigation';
 import { baseURL } from "../../config.js";
+import BottomNav from '../../components/BottomNav';
 
 const { Title, Text } = Typography;
 
@@ -101,7 +102,6 @@ export default function ProfilePage() {
           numBills: billData.num_bills ?? 0,
         });
       } catch (error) {
-        console.error('Error fetching user info or personal bill data:', error);
         router.push('/reg');
       } finally {
         setLoading(false);
@@ -112,23 +112,23 @@ export default function ProfilePage() {
   }, [router]);
 
   const handleLogout = () => {
-    alert('Logged out');
-    router.push('/');
+    message.success('Logged out successfully');
+    setTimeout(() => {
+      router.push('/');
+    }, 1000);
   };
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <Spin size="large" tip="Loading..." />
-      </div>
+      <div style={{ minHeight: '100vh' }}></div>
     );
   }
 
   if (!userInfo) {
-    return null; // Don't display content
+    return null;
   }
 
-  // qr code
+  // QR code content
   const qrContent = `https://localhost:3000/profile/${userInfo.username}`;
 
   return (
@@ -220,26 +220,7 @@ export default function ProfilePage() {
         Log Out
       </Button>
 
-      {/* Bottom navigation */}
-      <div className="bottom-nav" style={{
-        padding: windowWidth < 768 ? '10px 0' : '15px 0'
-      }}>
-        <div
-          className="nav-item"
-          onClick={() => router.push('/main')}
-          style={{ cursor: 'pointer' }}
-        >
-          <Image src="/avatar/yuan-icon.svg" width={24} height={24} alt="main" />
-        </div>
-        <div className="divider" />
-        <div
-          className="nav-item"
-          onClick={() => router.push('/profile')}
-          style={{ cursor: 'pointer' }}
-        >
-          <Image src="/avatar/profile-icon.svg" width={24} height={24} alt="profile" />
-        </div>
-      </div>
+      <BottomNav />
     </div>
   );
 }

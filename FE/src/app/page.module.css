@@ -1,94 +1,97 @@
 .page {
-  background-color: #f8f9fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.avatar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
 }
 
 .avatarImage {
-  position: absolute;
-  left: 83px;
-  top: 52px;
+  width: 236px;
+  height: 228px;
+  object-fit: contain;
 }
+
 .name {
-  position: absolute;
-  left: 117px;
-  top: 319px;
-  font-size: 40px;
+  text-align: center;
+  font-size: 24px;
   font-weight: bold;
-  font-family: "Roboto", sans-serif;
-  margin: 0%;
+  margin-bottom: 20px;
 }
 
 .loginBoard {
-  position: absolute;
-  left: 14px;
-  top: 406px;
-  width: 374px;
-  height: 356px;
-  background-color: white;
-  border-radius: 34px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
 
-  .loginBoardTitle {
-    margin-top: 31px;
-    margin-left: 131px;
-    margin-right: 137px;
-    margin-bottom: 21px;
-  }
+.loginBoardTitle {
+  text-align: center;
+  margin-bottom: 30px;
+}
 
-  .loginForm {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin-right: 22px;
-  }
+.loginBoardContent {
+  width: 100%;
+}
 
-  .formItem {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-  }
+.formItem {
+  margin-bottom: 20px;
+}
 
-  .label {
-    margin-right: 8px;
-    white-space: nowrap;
-  }
+.label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
 
-  .input {
-    width: 221px;
-    height: 32px;
-  }
+.input {
+  width: 100%;
+  height: 40px;
+  border-radius: 8px !important;
+}
 
-  .buttonWrapper {
-    margin-top: 6px;
-    align-self: flex-start; 
-    margin-left: calc(100% - 221px); 
-  }
+.buttonWrapper {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
 
-  .loginButton {
-    width: 69px;
-    height: 30px;
-    background-color: #0d288b !important;
-    color: white;
-    font-size: 14px;
-    font-weight: 400;
-    border: none;
-    padding: 0;
-    line-height: 30px;
-    border-radius: 0px;
-  }
-  .resetButton {
-    margin-left: 30px;
-    
-    text-decoration: underline;
-    color: #ca6464 !important;
-  }
-  .register {
-    margin-left: 27px;
-    .registerButton {
-      text-decoration: underline;
-      color: #ca6464 !important;
-    }
-    .registerText {
-      font-size: 14px;
-    }
-  }
+.loginButton {
+  width: 100%;
+  height: 40px;
+  background: #1248A0 !important;
+  border: none !important;
+  border-radius: 20px !important;
+  font-weight: bold;
+}
+
+.resetButton {
+  padding: 0 15px;
+  color: #1248A0 !important;
+}
+
+.register {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.registerText {
+  margin-right: 8px;
+  color: #666;
+}
+
+.registerButton {
+  color: #1248A0 !important;
+  padding: 0;
 }

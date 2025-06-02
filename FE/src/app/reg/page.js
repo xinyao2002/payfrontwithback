@@ -1,22 +1,20 @@
 "use client";
 import React from "react";
 import { Form, Input, Button, Typography } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import { useRouter } from "next/navigation";
 import "./register.css";
-import { baseURL } from "../../config.js"; // Import baseURL
+import { baseURL } from "../../config.js";
+import BackButton from "../../components/BackButton";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 export default function Register() {
-  console.log("baseURL:", baseURL);
   const registerAPI = `${baseURL}/accounts/register/`;
   const [form] = useForm();
   const router = useRouter();
 
   const handleFinish = async (values) => {
-    //console.log('Submitted values:', values);
     const { username, firstName, lastName, email, password } = values;
     const data = {
       username: username,
@@ -38,7 +36,7 @@ export default function Register() {
         const result = await response.json();
         if (response.ok) {
           console.log(result);
-          router.push("/"); // redirect to main page
+          router.push("/");
         } else {
           alert(`Registration failed: ${result.error || response.statusText}`);
           console.error("Registration error:", result);
@@ -51,25 +49,16 @@ export default function Register() {
   };
 
   const handleBack = () => {
-    router.push("/"); // back to main
+    router.push("/");
   };
 
   return (
     <div className="register-page">
-      {/* return button */}
       <div className="register-header">
-        <Button
-          type="link"
-          icon={<ArrowLeftOutlined />}
-          className="back-button"
-          onClick={handleBack}
-        >
-          Back <Text type="secondary">Log In Page</Text>
-        </Button>
+        <BackButton onClick={handleBack} />
         <Title level={2}>PayPay Registration</Title>
       </div>
 
-      {/* reg card */}
       <div className="register-container">
         <Form
           form={form}
@@ -77,7 +66,7 @@ export default function Register() {
           labelCol={{ flex: "80px" }}
           wrapperCol={{ flex: "auto" }}
           onFinish={handleFinish}
-          requiredMark="optional"
+          requiredMark={false}
         >
           <Form.Item
             label="User Name"
@@ -128,44 +117,49 @@ export default function Register() {
             label="Password"
             name="password"
             rules={[
-              { required: true, message: "Please input your password!" },
               {
-                pattern: /^(?=.*[a-zA-Z])(?=.*\d).{6,}$/,
-                message: "At least 6 characters with letters and numbers.",
-              },
+                validator: async (_, value) => {
+                  if (!value) {
+                    throw new Error("Please input your password!");
+                  }
+                  if (!/^(?=.*[a-zA-Z])(?=.*\d).{6,}$/.test(value)) {
+                    throw new Error("At least 6 characters with letters and numbers");
+                  }
+                }
+              }
             ]}
-            className="uniform-input"
+            className="uniform-input password-input"
+            validateTrigger={['onChange', 'onBlur']}
           >
             <Input.Password placeholder="input password" />
           </Form.Item>
-
-          <Text type="danger" style={{ fontSize: 12 }}>
-            (At least 6 characters and include numbers and characters)
-          </Text>
 
           <Form.Item
             label="Re-type Password"
             name="confirmPassword"
             dependencies={["password"]}
             rules={[
-              { required: true, message: "Please confirm your password!" },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue("password") === value) {
-                    return Promise.resolve();
+              {
+                validator: async (_, value) => {
+                  if (!value) {
+                    throw new Error("Please re-type your password!");
                   }
-                  return Promise.reject(new Error("Passwords do not match!"));
-                },
-              }),
+                  const password = form.getFieldValue("password");
+                  if (value && password && value !== password) {
+                    throw new Error("The two passwords do not match!");
+                  }
+                }
+              }
             ]}
-            className="uniform-input"
+            className="uniform-input password-input"
+            validateTrigger={['onChange', 'onBlur']}
           >
             <Input.Password placeholder="input password" />
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block size="large">
-              Register
+            <Button type="primary" htmlType="submit" block>
+              <Title level={2} style={{ color: '#ffffff', margin: 0 }}>Register</Title>
             </Button>
           </Form.Item>
         </Form>

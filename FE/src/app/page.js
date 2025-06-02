@@ -13,9 +13,6 @@ export default function Home() {
   const router = useRouter();
 
   const onFinish = (values) => {
-    
-    console.log("Login Information:", values);
-    
     fetch(loginAPI, {
       method: "POST",
       headers: {
@@ -30,19 +27,14 @@ export default function Home() {
       .then(async (response) => {
         const result = await response.json();
         if (response.ok) {
-          console.log("Login successful:", result);
-          alert("Login successful");
-          router.push("/main"); // redirect to sendbill page
+          router.push("/main");
         } else {
           alert(`Login failed: ${result.error || response.statusText}`);
-          console.error("Login error:", result);
         }
       })
-      .catch((error) => {
-        console.error("Error:", error);
+      .catch(() => {
         alert("An error occurred during login");
       });
-   
   };
 
   const handleRegistration = () => {
@@ -73,7 +65,7 @@ export default function Home() {
 
       <div className={styles.loginBoard}>
         <div className={styles.loginBoardTitle}>
-          <Title level={5}>Welcome Back</Title>
+          <Title level={5} style={{ whiteSpace: 'nowrap' }}>Welcome Back</Title>
         </div>
 
         <div className={styles.loginBoardContent}>

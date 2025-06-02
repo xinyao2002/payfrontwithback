@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import styles from './page.module.css';
+import BottomNav from '../../components/BottomNav';
 
 const { Title } = Typography;
 const getCookie = (name) => {
@@ -123,7 +124,7 @@ export default function AddBill() {
           setScanningIndex(null);
         },
         (errorMessage) => {
-          // parse error, ignore it.
+          // Handle scan error
         }
       );
 
@@ -334,29 +335,11 @@ export default function AddBill() {
         </Form.Item>
       </Form>
 
-      {/* QR Code Scanner for each participant */}
       {scanningIndex !== null && (
         <div id={`reader-${scanningIndex}`} className={styles.scanner}></div>
       )}
 
-      {/* --- Bottom Menu Bar --- */}
-      <div className={styles.bottomNav}>
-        <div
-          className={styles.navItem}
-          onClick={() => router.push('/main')}
-          style={{ cursor: 'pointer' }}
-        >
-          <Image src="/avatar/yuan-icon.svg" width={24} height={24} alt="main" />
-        </div>
-        <div className={styles.divider} />
-        <div
-          className={styles.navItem}
-          onClick={() => router.push('/profile')}
-          style={{ cursor: 'pointer' }}
-        >
-          <Image src="/avatar/profile-icon.svg" width={24} height={24} alt="profile" />
-        </div>
-      </div>
+      <BottomNav />
     </div>
   );
 }

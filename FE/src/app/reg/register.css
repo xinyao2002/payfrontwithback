@@ -17,11 +17,6 @@
   margin-bottom: 16px;
 }
 
-.back-button {
-  color: black !important;
-  padding-left: 0;
-}
-
 .register-container {
   background-color: white;
   width: 100%;
@@ -33,13 +28,73 @@
   overflow-y: auto;
 }
 
+.uniform-input {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.uniform-input .ant-form-item-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
 .uniform-input .ant-form-item-label {
-  padding-right: 6px; /* ← 控制 label 和输入框之间的间距 */
+  padding-right: 6px;
   text-align: left;
+  width: 80px !important;
+  flex-shrink: 0;
+}
+
+.uniform-input .ant-form-item-label > label {
+  height: auto;
+  margin: 0;
+  color: #000000;
+}
+
+.uniform-input .ant-form-item-label > label::after {
+  display: none !important;
+}
+
+.uniform-input .ant-form-item-control {
+  position: relative;
+  flex: 1;
 }
 
 .uniform-input .ant-input,
 .uniform-input .ant-input-password {
   width: 100%;
-  max-width: 160px; /* 保持输入框尺寸一致 */
+  max-width: 160px;
+}
+
+.uniform-input .ant-form-item-explain {
+  position: absolute;
+  left: 0;
+  top: 40px;
+  font-size: 12px;
+  color: #ff4d4f;
+  width: 200px;
+  z-index: 1;
+}
+
+.uniform-input.password-input {
+  margin-bottom: 32px;
+  height: 80px;
+}
+
+.uniform-input.password-input .ant-form-item-control {
+  min-height: 32px;
+}
+
+/* 注册按钮样式 */
+.register-container .ant-btn-primary {
+  margin-top: 16px;
+  position: relative;
+  z-index: 0;
+  background-color: #0d288b !important;
+  border-radius: 29px !important;
+  height: 58px;
+  font-size: 20px;
+  font-weight: 600;
+  border: none !important;
 }
