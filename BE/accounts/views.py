@@ -106,14 +106,9 @@ def forgot_password(request):
             uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
             token = token_generator.make_token(user)
 
-            # Need to modify later - Need to configure FRONTEND_BASE_URL in settings.py
-            # FRONTEND_BASE_URL = "https://paypay.vercel.app"  Next.js deployment address, use Frontend_Base_URL by default, if not available use localhost
-
-            #frontend_url = getattr(settings, 'FRONTEND_BASE_URL', 'http://localhost:3000')
             frontend_url = 'http://localhost:3000' 
-            reset_link = f"{frontend_url}/reset-password/{uidb64}/{token}/"
+            reset_link = f"{frontend_url}/reset-password?uid={uidb64}&token={token}"
 
-            # Send email - Need to configure sender email later, see settings.py
             subject = "Reset Your PayPay Password"
             message = f"Hi {user.username},\n\nClick the link below to reset your password:\n\n{reset_link}"
             from_email = settings.DEFAULT_FROM_EMAIL

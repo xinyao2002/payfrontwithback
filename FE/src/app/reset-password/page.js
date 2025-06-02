@@ -15,37 +15,30 @@ export default function ResetPassword() {
   const searchParams = useSearchParams();
   const uid = searchParams.get('uid');
   const token = searchParams.get('token');
-  const resetPwdAPI = `${baseURL}/accounts/reset-password/`;
+  const resetPwdAPI = `${baseURL}/accounts/reset-password/${uid}/${token}/`;
   const [form] = Form.useForm();
 
   const handleReset = () => {
     form.validateFields().then(async (values) => {
-      console.log("Resetting password with:", values);
-      //alert("Password reset successfully");
       await fetch(resetPwdAPI, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          uid: uid,
-          token: token,
           password: values.newPassword,
         }),
       })
         .then(async (response) => {
           const result = await response.json();
           if (response.ok) {
-            console.log(result);
             alert("Password reset successfully");
-            router.push("/"); // redirect to main page
+            router.push("/"); // redirect to login page
           } else {
             alert(`Error: ${result.error || response.statusText}`);
-            console.error("Error:", result);
           }
         })
         .catch((error) => {
-          console.error("Error:", error);
           alert("An error occurred while resetting the password");
         });
     });

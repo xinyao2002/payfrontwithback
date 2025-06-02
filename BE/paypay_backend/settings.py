@@ -37,7 +37,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'yao185542@gmail.com'
-EMAIL_HOST_PASSWORD = 'app_password'  # Need to apply and replace
+EMAIL_HOST_PASSWORD = 'zozg mxfw swvp bapm'   # Need to apply and replace
 DEFAULT_FROM_EMAIL = 'PayPay Support <yao185542@gmail.com>'
 
 # Configure Channels
